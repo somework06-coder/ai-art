@@ -2,6 +2,7 @@
 import { createClient } from "@/utils/supabase/server"
 import Link from "next/link"
 import AuthButton from "./AuthButton"
+import DownloadCenter from "./DownloadCenter"
 
 export default async function Navbar() {
     const supabase = await createClient()
@@ -75,35 +76,7 @@ export default async function Navbar() {
                     alignItems: 'center',
                     gap: '20px',
                 }}>
-                    {user && (
-                        <Link
-                            href="/library"
-                            style={{
-                                fontSize: '13px',
-                                fontWeight: 600,
-                                color: '#999',
-                                textDecoration: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                            }}
-                        >
-                            <span className="material-symbols-outlined" style={{
-                                fontSize: '18px',
-                                color: 'var(--accent)',
-                            }}>bookmarks</span>
-                            My Library
-                        </Link>
-                    )}
-
-                    {user && (
-                        <div style={{
-                            width: '1px',
-                            height: '24px',
-                            background: 'rgba(255,255,255,0.1)',
-                        }} />
-                    )}
-
+                    <DownloadCenter />
                     <AuthButton user={user} />
                 </div>
             </div>

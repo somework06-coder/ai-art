@@ -12,6 +12,15 @@ export type ExportJob = {
     format: string;
     thumbnailUrl?: string;
     title?: string;
+    estimatedTimeMs?: number;
+    startTimeMs?: number;
+    // Export Configuration for Background Worker
+    shaderCode?: string;
+    aspectRatio?: string;
+    quality?: string;
+    crf?: number;
+    duration?: number;
+    fps?: number;
 };
 
 type DownloadQueueContextType = {
@@ -62,6 +71,80 @@ export function DownloadQueueProvider({ children }: { children: React.ReactNode 
 
         return () => clearInterval(interval);
     }, [jobs]);
+
+    // Sequential Processor for Local Renders
+    useEffect(() => {
+        // Find if we are currently processing a local job
+        const isProcessing = jobs.some(j => j.status === 'processing' && j.jobId.startsWith('local-'));
+
+        // If we are already processing one, wait. We only do ONE at a time sequentially.
+        if (isProcessing) return;
+
+        // Find the next pending local job in the queue
+        const nextJob = jobs.find(j => j.status === 'pending' && j.jobId.startsWith('local-'));
+        if (!nextJob) return;
+
+        // Prevent infinite loops by creating an inner async function
+        const processJob = async () => {
+            // Immediately mark as processing so the next effect tick doesn't pick it up again
+            setJobs(prev => prev.map(j => j.jobId === nextJob.jobId ? { ...j, status: 'processing', statusText: `Rendering ${nextJob.quality}...` } : j));
+
+            try {
+                // We use a fake progress interval just to show UI movement
+                let simulatedProgress = 0;
+                const progressInterval = setInterval(() => {
+                    simulatedProgress += 5;
+                    if (simulatedProgress < 90) {
+                        setJobs(prev => prev.map(j => j.jobId === nextJob.jobId ? { ...j, progress: simulatedProgress } : j));
+                    }
+                }, 1000);
+
+                const response = await fetch('/api/export-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shaderCode: nextJob.shaderCode,
+                        aspectRatio: nextJob.aspectRatio || '16:9',
+                        quality: nextJob.quality || 'HD',
+                        crf: nextJob.crf || 23,
+                        duration: nextJob.duration || 10,
+                        fps: nextJob.fps || 30,
+                        format: nextJob.format || 'mp4'
+                    })
+                });
+
+                clearInterval(progressInterval);
+
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+
+                setJobs(prev => prev.map(j => j.jobId === nextJob.jobId ? { ...j, progress: 95, statusText: 'Downloading...' } : j));
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+
+                setJobs(prev => prev.map(j => j.jobId === nextJob.jobId ? {
+                    ...j,
+                    status: 'completed',
+                    progress: 100,
+                    statusText: 'Done',
+                    videoUrl: url
+                } : j));
+
+            } catch (error) {
+                console.error("Local export failed:", error);
+                setJobs(prev => prev.map(j => j.jobId === nextJob.jobId ? {
+                    ...j,
+                    status: 'failed',
+                    statusText: 'Export Failed'
+                } : j));
+            }
+        };
+
+        processJob();
+
+    }, [jobs]); // Trigger whenever jobs list changes
 
     const addJob = (job: ExportJob) => {
         setJobs(prev => [...prev, job]);

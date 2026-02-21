@@ -17,6 +17,7 @@ interface ExportRequest {
     duration: number;
     fps?: number;
     format?: 'mp4' | 'mov';
+    crf?: number;
 }
 
 function getResolution(aspectRatio: string, quality: string): { width: number; height: number } {
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const body: ExportRequest = await request.json();
-        const { shaderCode, aspectRatio = '16:9', quality = 'HD', duration = 5, fps = 30, format = 'mp4' } = body;
+        const { shaderCode, aspectRatio = '16:9', quality = 'HD', duration = 5, fps = 30, format = 'mp4', crf: providedCrf } = body;
 
         if (!shaderCode) {
             return NextResponse.json({ error: 'Shader code is required' }, { status: 400 });
@@ -168,23 +169,29 @@ export async function POST(request: NextRequest) {
 
         // Determine CRF (Quality) based on resolution
         // Lower CRF = Higher Quality/Bitrate. 
-        // 18 is standard. 12 is near-lossless (good for stock). 10 is very high.
-        let crf = 18;
-        if (quality === '4K') crf = 14; // High Quality Stock (Sweet Spot)
-        if (quality === 'FHD') crf = 16; // High Quality for FHD
+        // User requested 18 for High.
+        let crf = providedCrf;
+        if (!crf) {
+            crf = 18;
+            if (quality === '4K') crf = 14; // Legacy fallback
+            if (quality === 'FHD') crf = 16; // Legacy fallback
+        }
+
+        let ffmpegOutputOptions = [
+            '-pix_fmt yuv420p',
+            `-crf ${crf}`,
+            '-preset fast',
+            '-movflags +faststart'
+        ];
+        let vCodec = 'libx264';
 
         await new Promise<void>((resolve, reject) => {
             ffmpeg()
                 .input(path.join(framesDir, 'frame_%05d.jpg'))
                 .inputFPS(fps)
                 .output(outputPath)
-                .videoCodec('libx264')
-                .outputOptions([
-                    '-pix_fmt yuv420p',
-                    `-crf ${crf}`,
-                    '-preset fast',
-                    '-movflags +faststart'
-                ])
+                .videoCodec(vCodec)
+                .outputOptions(ffmpegOutputOptions)
                 .on('start', (cmd: string) => console.log('FFmpeg command:', cmd))
                 .on('progress', (progress: any) => {
                     if (progress.percent) {

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 import Navbar from "@/components/Navbar";
+import { DownloadQueueProvider } from "@/components/DownloadQueueProvider";
 
 export default function RootLayout({
   children,
@@ -23,8 +24,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
       </head>
       <body>
-        <Navbar />
-        {children}
+        <DownloadQueueProvider>
+          <Navbar />
+          {children}
+        </DownloadQueueProvider>
       </body>
     </html>
   );
