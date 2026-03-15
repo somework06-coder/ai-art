@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -42,7 +42,7 @@ const PACKS: TopUpPack[] = [
     }
 ];
 
-export default function TopUpPage() {
+function TopUpContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const uid = searchParams.get('uid');
@@ -186,5 +186,17 @@ export default function TopUpPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function TopUpPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+                <span className="material-symbols-outlined text-[var(--accent)] text-4xl animate-spin">progress_activity</span>
+            </div>
+        }>
+            <TopUpContent />
+        </Suspense>
     );
 }
