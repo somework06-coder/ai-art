@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { open } from '@tauri-apps/plugin-shell';
 import { createClient } from '@/utils/supabase/client';
 
 interface InsufficientCreditsModalProps {
@@ -18,7 +18,7 @@ export default function InsufficientCreditsModal({
     currentCredits
 }: InsufficientCreditsModalProps) {
     const [shouldRender, setShouldRender] = useState(false);
-    const router = useRouter();
+    const [isOpeningBrowser, setIsOpeningBrowser] = useState(false);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -30,15 +30,18 @@ export default function InsufficientCreditsModal({
     };
 
     const handleTopUp = async () => {
+        setIsOpeningBrowser(true);
         try {
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                router.push(`/topup?uid=${user.id}`);
-                onClose();
+                await open(`https://ai-art-iota.vercel.app/topup?uid=${user.id}`);
             }
         } catch (error) {
-            console.error('Failed to navigate:', error);
+            console.error('Failed to open browser:', error);
+        } finally {
+            setIsOpeningBrowser(false);
+            onClose();
         }
     };
 
@@ -88,9 +91,14 @@ export default function InsufficientCreditsModal({
                     <button 
                         className="auth-button primary-button w-full"
                         onClick={handleTopUp}
+                        disabled={isOpeningBrowser}
                     >
-                        <span className="material-symbols-outlined">add_circle</span>
-                        Get More Credits
+                        {isOpeningBrowser ? (
+                            <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                        ) : (
+                            <span className="material-symbols-outlined">add_circle</span>
+                        )}
+                        {isOpeningBrowser ? 'Opening Browser...' : 'Get More Credits'}
                     </button>
                     <button className="secondary-button" onClick={onClose}>
                         Cancel

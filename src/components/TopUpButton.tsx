@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { open } from '@tauri-apps/plugin-shell';
 import type { User } from '@supabase/supabase-js';
 
 interface TopUpButtonProps {
@@ -10,13 +10,16 @@ interface TopUpButtonProps {
 
 export default function TopUpButton({ user }: TopUpButtonProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
 
-    const handleTopUp = () => {
+    const handleTopUp = async () => {
         setIsLoading(true);
-        router.push(`/topup?uid=${user.id}`);
-        // Remove loading state quickly so it's not stuck when navigating back
-        setTimeout(() => setIsLoading(false), 500);
+        try {
+            await open(`https://ai-art-iota.vercel.app/topup?uid=${user.id}`);
+        } catch (error) {
+            console.error('Failed to open browser:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
