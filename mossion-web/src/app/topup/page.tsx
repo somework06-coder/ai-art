@@ -102,8 +102,8 @@ function TopUpContent() {
             <header className="border-b border-white/10 bg-black/50 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-6xl mx-auto px-6 h-16 flex items-center">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg overflow-hidden shadow-[0_0_15px_rgba(225,178,69,0.3)]">
-                            <img src="/mossion logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                        <div className="w-8 h-8 rounded-lg overflow-hidden shadow-[0_0_15px_rgba(225,178,69,0.3)] bg-black flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[var(--accent)] text-xl">palette</span>
                         </div>
                         <span className="font-bold tracking-tight text-lg">Mossion</span>
                     </div>
