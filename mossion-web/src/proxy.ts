@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from './lib/supabase/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     // Only apply to /admin routes
     if (request.nextUrl.pathname.startsWith('/admin')) {
         const supabase = await createClient()
