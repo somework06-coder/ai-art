@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 interface InsufficientCreditsModalProps {
     isOpen: boolean;
@@ -16,6 +18,7 @@ export default function InsufficientCreditsModal({
     currentCredits
 }: InsufficientCreditsModalProps) {
     const [shouldRender, setShouldRender] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -24,6 +27,19 @@ export default function InsufficientCreditsModal({
 
     const handleAnimationEnd = () => {
         if (!isOpen) setShouldRender(false);
+    };
+
+    const handleTopUp = async () => {
+        try {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                router.push(`/topup?uid=${user.id}`);
+                onClose();
+            }
+        } catch (error) {
+            console.error('Failed to navigate:', error);
+        }
     };
 
     if (!shouldRender) return null;
@@ -69,7 +85,10 @@ export default function InsufficientCreditsModal({
                 </p>
 
                 <div className="modal-actions">
-                    <button className="auth-button primary-button w-full">
+                    <button 
+                        className="auth-button primary-button w-full"
+                        onClick={handleTopUp}
+                    >
                         <span className="material-symbols-outlined">add_circle</span>
                         Get More Credits
                     </button>

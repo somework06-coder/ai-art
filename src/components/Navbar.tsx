@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 import AuthButton from "@/components/AuthButton"
 import DownloadCenter from "@/components/DownloadCenter"
 import OfflineIndicator from "@/components/OfflineIndicator"
+import TopUpButton from "@/components/TopUpButton"
 import type { User } from '@supabase/supabase-js'
 import { useCredits } from "@/hooks/useCredits"
 
@@ -95,9 +96,12 @@ export default function Navbar() {
                 <div className="flex items-center gap-4">
                     <OfflineIndicator />
                     {user && (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-inner">
-                            <span className="text-[11px] font-bold text-[#E1B245] uppercase tracking-wider">Credits</span>
-                            <span className="text-sm font-black text-white">{credits}</span>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-inner">
+                                <span className="text-[11px] font-bold text-[#E1B245] uppercase tracking-wider">Credits</span>
+                                <span className="text-sm font-black text-white">{credits}</span>
+                            </div>
+                            <TopUpButton user={user} />
                         </div>
                     )}
                     {(user && pathname !== '/login') && <DownloadCenter />}
