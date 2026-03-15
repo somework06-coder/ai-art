@@ -4,10 +4,11 @@ import { createClient as createServerClient } from '@/lib/supabase/server';
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const userIdToUpdate = params.id;
+        const resolvedParams = await params;
+        const userIdToUpdate = resolvedParams.id;
         const { credits } = await request.json();
 
         if (typeof credits !== 'number') {
